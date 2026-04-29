@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LLM Orchestrator Dashboard · Showcase</title>
+  <meta name="description" content="多模型主从协作平台 - 展示页" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+    .fade-in { animation: fadeIn .35s ease-in; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .pulse-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .pulse-dot.green { background: #34d399; box-shadow: 0 0 8px #34d399; animation: pulse 2s infinite; }
+    .pulse-dot.gray  { background: #64748b; }
+    @keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: .5 } }
+    .gradient-text { background: linear-gradient(90deg, #6366f1, #06b6d4, #10b981); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .glow { box-shadow: 0 0 30px rgba(99, 102, 241, 0.15); }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+
+<!-- Hero -->
+<section class="relative overflow-hidden">
+  <div class="absolute inset-0 bg-gradient-to-br from-indigo-900/30 via-slate-950 to-emerald-900/20"></div>
+  <div class="relative max-w-6xl mx-auto px-6 pt-20 pb-16 text-center">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs mb-6">
+      <span class="pulse-dot green"></span>
+      <span>v1.0 · Production Ready</span>
+    </div>
+    <h1 class="text-5xl sm:text-6xl font-bold tracking-tight mb-6">
+      <span class="gradient-text">LLM Orchestrator</span>
+    </h1>
+    <p class="text-xl sm:text-2xl text-slate-300 mb-4">多模型主从协作平台</p>
+    <p class="text-base text-slate-400 max-w-2xl mx-auto mb-10">
+      主模型负责拆任务和汇总，子代理并行执行。支持 Hermes、OpenClue、CodeClue 与 OpenAI 兼容平台。主模型故障自动切换到备用模型。
+    </p>
+    <div class="flex flex-wrap items-center justify-center gap-3">
+      <a href="https://github.com/adminlip/llm-orchestrator-dashboard" target="_blank" class="px-6 py-3 rounded-xl bg-white text-slate-900 font-medium hover:bg-slate-200 transition">⭐ View on GitHub</a>
+      <a href="#dashboard" class="px-6 py-3 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-medium transition">查看面板演示</a>
+      <a href="#quickstart" class="px-6 py-3 rounded-xl border border-slate-700 hover:bg-slate-800 transition">快速开始</a>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="max-w-6xl mx-auto px-6 py-16">
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="rounded-2xl border border-slate-800 bg-slate-900/50 p-6 fade-in">
+      <div class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-4">
+        <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+      </div>
+      <h3 class="text-lg font-semibold mb-2">主从架构</h3>
+      <p class="text-sm text-slate-400">主模型拆解任务并汇总结果，子代理并行执行子任务。</p>
+    </div>
+    <div class="rounded-2xl border border-slate-800 bg-slate-900/50 p-6 fade-in">
+      <div class="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center mb-4">
+        <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      </div>
+      <h3 class="text-lg font-semibold mb-2">自动故障切换</h3>
+      <p class="text-sm text-slate-400">主模型故障自动提升备用模型为主，并记录故障原因。</p>
+    </div>
+    <div class="rounded-2xl border border-slate-800 bg-slate-900/50 p-6 fade-in">
+      <div class="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center mb-4">
+        <svg class="w-5 h-5 text-violet-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2"/></svg>
+      </div>
+      <h3 class="text-lg font-semibold mb-2">多平台接入</h3>
+      <p class="text-sm text-slate-400">Hermes / OpenClue / CodeClue / 任意 OpenAI 兼容服务。</p>
+    </div>
+  </div>
+</section>
+
+<!-- Dashboard Preview -->
+<section id="dashboard" class="max-w-6xl mx-auto px-6 py-12">
+  <h2 class="text-3xl font-bold mb-2 text-center">面板预览</h2>
+  <p class="text-slate-400 text-center mb-10">下面是真实运行时的 Dashboard 截图（静态演示，数据为示例）</p>
+
+  <div class="rounded-2xl border border-slate-800 bg-slate-900 p-6 glow fade-in">
+    <!-- Top -->
+    <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-800">
+      <div>
+        <h3 class="text-xl font-bold">LLM Orchestrator Dashboard</h3>
+        <p class="text-xs text-slate-500">多模型主从协作平台</p>
+      </div>
+      <div class="flex items-center gap-2 text-sm">
+        <span class="pulse-dot green"></span>
+        <span class="text-emerald-300">运行中</span>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+      <!-- Primary -->
+      <div class="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
+        <div class="text-xs text-emerald-400 mb-2">PRIMARY MODEL</div>
+        <div class="text-lg font-bold mb-1">Mimo V2.5 Pro</div>
+        <div class="text-sm text-slate-400 space-y-1">
+          <div>模型：<code class="text-emerald-300">mimo-v2.5-pro</code></div>
+          <div>平台：custom-openai</div>
+          <div>状态：<span class="text-emerald-300">active</span></div>
+        </div>
+      </div>
+
+      <!-- Workers -->
+      <div class="lg:col-span-2 rounded-xl border border-slate-800 bg-slate-950 p-4">
+        <div class="text-xs text-sky-400 mb-3">SUB-AGENTS</div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="rounded-lg border border-slate-800 p-3">
+            <div class="text-sm font-medium mb-1">Claude Backup</div>
+            <div class="text-xs text-slate-500">claude-3-5-sonnet</div>
+            <div class="mt-2 text-xs text-sky-300">standby</div>
+          </div>
+          <div class="rounded-lg border border-slate-800 p-3">
+            <div class="text-sm font-medium mb-1">GLM Worker</div>
+            <div class="text-xs text-slate-500">glm-4-plus</div>
+            <div class="mt-2 text-xs text-emerald-300">active</div>
+          </div>
+          <div class="rounded-lg border border-slate-800 p-3">
+            <div class="text-sm font-medium mb-1">CodeClue Worker</div>
+            <div class="text-xs text-slate-500">codeclue-pro</div>
+            <div class="mt-2 text-xs text-emerald-300">active</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Platforms + Failover -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div class="rounded-xl border border-slate-800 bg-slate-950 p-4">
+        <div class="text-xs text-violet-400 mb-3">PLATFORMS</div>
+        <div class="space-y-2 text-sm">
+          <div class="flex items-center justify-between"><span>custom-openai</span><span class="pulse-dot green"></span></div>
+          <div class="flex items-center justify-between"><span>hermes-gateway</span><span class="pulse-dot green"></span></div>
+          <div class="flex items-center justify-between"><span>codeclue-platform</span><span class="pulse-dot green"></span></div>
+        </div>
+      </div>
+      <div class="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+        <div class="text-xs text-amber-400 mb-3">RECENT FAILOVER</div>
+        <div class="text-sm font-medium text-amber-200">deepseek-v3 &rarr; mimo-primary</div>
+        <div class="text-xs text-slate-400 mt-1">credential pool exhausted</div>
+        <div class="text-xs text-slate-600 mt-1">2 hours ago</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Architecture -->
+<section class="max-w-6xl mx-auto px-6 py-12">
+  <h2 class="text-3xl font-bold mb-10 text-center">架构</h2>
+  <div class="rounded-2xl border border-slate-800 bg-slate-900/50 p-8 font-mono text-sm text-slate-300 overflow-x-auto">
+<pre>
+                    ┌─────────────────────────────┐
+                    │      Web Dashboard           │
+                    │  (FastAPI + Tailwind)        │
+                    └──────────────┬──────────────┘
+                                   │
+                    ┌──────────────▼──────────────┐
+                    │     Orchestrator Service     │
+                    │  delegate → execute → sum    │
+                    └──────────────┬──────────────┘
+                                   │
+            ┌──────────────────────┼──────────────────────┐
+            │                      │                      │
+   ┌────────▼────────┐    ┌────────▼────────┐    ┌────────▼────────┐
+   │  PRIMARY MODEL  │    │   WORKER #1     │    │   WORKER #2     │
+   │  Mimo V2.5 Pro  │    │   GLM-4 Plus    │    │   CodeClue      │
+   └────────┬────────┘    └────────┬────────┘    └────────┬────────┘
+            │                      │                      │
+            └──────────────────────┼──────────────────────┘
+                                   │
+                    ┌──────────────▼──────────────┐
+                    │   Platform Adapters          │
+                    │  OpenAI / Hermes / OpenClue  │
+                    └─────────────────────────────┘
+</pre>
+  </div>
+</section>
+
+<!-- Challenges & Solutions -->
+<section class="max-w-6xl mx-auto px-6 py-12">
+  <h2 class="text-3xl font-bold mb-2 text-center">踩坑与解决方案</h2>
+  <p class="text-slate-400 text-center mb-10">项目落地过程中遇到的关键问题，以及最终采用的处理方式</p>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div class="rounded-2xl border border-red-500/20 bg-red-500/5 p-5">
+      <div class="text-xs text-red-300 mb-2">问题 01</div>
+      <h3 class="text-lg font-semibold mb-2">主模型故障后整体不可用</h3>
+      <p class="text-sm text-slate-300 mb-3">早期版本依赖单一主模型，一旦请求失败或平台抖动，整条链路中断。</p>
+      <div class="text-xs text-emerald-300 mb-1">解决方案</div>
+      <p class="text-sm text-slate-300">实现主备切换机制：记录故障、提升备份模型为主、恢复后可降级回子代理。</p>
+    </div>
+
+    <div class="rounded-2xl border border-red-500/20 bg-red-500/5 p-5">
+      <div class="text-xs text-red-300 mb-2">问题 02</div>
+      <h3 class="text-lg font-semibold mb-2">不同平台接入方式不统一</h3>
+      <p class="text-sm text-slate-300 mb-3">Hermes / OpenClue / CodeClue 与 OpenAI 兼容平台调用形态存在差异。</p>
+      <div class="text-xs text-emerald-300 mb-1">解决方案</div>
+      <p class="text-sm text-slate-300">抽象平台适配层，统一执行上下文与结果结构，支持 Mock 与真实 API 自动切换。</p>
+    </div>
+
+    <div class="rounded-2xl border border-red-500/20 bg-red-500/5 p-5">
+      <div class="text-xs text-red-300 mb-2">问题 03</div>
+      <h3 class="text-lg font-semibold mb-2">演示环境容易暴露真实地址与密钥</h3>
+      <p class="text-sm text-slate-300 mb-3">直接展示生产地址和真实 API 配置存在安全风险，不适合外部分享。</p>
+      <div class="text-xs text-emerald-300 mb-1">解决方案</div>
+      <p class="text-sm text-slate-300">将展示页与真实服务隔离：对外只提供静态介绍页，所有敏感地址替换为示例域名。</p>
+    </div>
+
+    <div class="rounded-2xl border border-red-500/20 bg-red-500/5 p-5">
+      <div class="text-xs text-red-300 mb-2">问题 04</div>
+      <h3 class="text-lg font-semibold mb-2">部署后接口返回异常</h3>
+      <p class="text-sm text-slate-300 mb-3">云服务器存在端口冲突与运行路径差异，导致健康检查路径异常。</p>
+      <div class="text-xs text-emerald-300 mb-1">解决方案</div>
+      <p class="text-sm text-slate-300">改为 systemd 固化启动命令、指定 app-dir 并切换可用端口，最终完成稳定运行。</p>
+    </div>
+  </div>
+
+  <div class="mt-6 rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
+    <div class="text-xs text-slate-500 mb-2">交付结果</div>
+    <ul class="text-sm text-slate-300 space-y-2 list-disc pl-5">
+      <li>支持主模型动态切换与自动故障切换</li>
+      <li>支持多平台统一适配与可观测展示面板</li>
+      <li>支持 Windows / Linux / Docker / systemd 的开箱即用部署</li>
+      <li>支持对外安全展示（不暴露真实 API 和服务器地址）</li>
+    </ul>
+  </div>
+</section>
+
+<!-- Quick Start -->
+<section id="quickstart" class="max-w-6xl mx-auto px-6 py-12">
+  <h2 class="text-3xl font-bold mb-10 text-center">快速开始</h2>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="rounded-2xl border border-slate-800 bg-slate-900/50 p-6">
+      <div class="text-xs text-slate-500 mb-2">WINDOWS</div>
+      <h3 class="font-semibold mb-3">双击启动</h3>
+      <pre class="text-xs bg-black/40 rounded p-3 text-slate-300">start.bat</pre>
+    </div>
+    <div class="rounded-2xl border border-slate-800 bg-slate-900/50 p-6">
+      <div class="text-xs text-slate-500 mb-2">LINUX / MACOS</div>
+      <h3 class="font-semibold mb-3">脚本启动</h3>
+      <pre class="text-xs bg-black/40 rounded p-3 text-slate-300">chmod +x start.sh
+./start.sh</pre>
+    </div>
+    <div class="rounded-2xl border border-slate-800 bg-slate-900/50 p-6">
+      <div class="text-xs text-slate-500 mb-2">DOCKER</div>
+      <h3 class="font-semibold mb-3">容器启动</h3>
+      <pre class="text-xs bg-black/40 rounded p-3 text-slate-300">docker compose up -d</pre>
+    </div>
+  </div>
+
+  <div class="mt-10 rounded-2xl border border-slate-800 bg-slate-900/50 p-6">
+    <div class="text-xs text-slate-500 mb-2">CURL</div>
+    <h3 class="font-semibold mb-4">运行编排</h3>
+    <pre class="text-xs bg-black/40 rounded p-4 text-slate-300 overflow-x-auto">curl -X POST http://127.0.0.1:8000/api/orchestrate \
+  -H "Content-Type: application/json" \
+  -d '{"prompt":"比较 Hermes 和 CodeClue 的代码协作能力"}'</pre>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="border-t border-slate-800 mt-12 py-8">
+  <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-slate-500">
+    <div>LLM Orchestrator Dashboard · MIT License</div>
+    <div class="flex gap-4">
+      <a href="https://github.com/adminlip/llm-orchestrator-dashboard" target="_blank" class="hover:text-slate-300">GitHub</a>
+      <a href="https://github.com/adminlip/llm-orchestrator-dashboard/blob/main/DEPLOY.md" target="_blank" class="hover:text-slate-300">部署文档</a>
+      <a href="https://github.com/adminlip/llm-orchestrator-dashboard/blob/main/README.md" target="_blank" class="hover:text-slate-300">README</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
