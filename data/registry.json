@@ -1,0 +1,174 @@
+{
+  "platforms": [
+    {
+      "id": "custom-openai",
+      "name": "Custom OpenAI Compatible",
+      "kind": "openai_compatible",
+      "base_url": "https://token-plan-sgp.xiaomimimo.com/v1",
+      "api_key_env": "OPENAI_API_KEY",
+      "transport": "openai_chat",
+      "enabled": true,
+      "metadata": {
+        "notes": "适用于 Mimo / OpenAI 兼容接口"
+      }
+    },
+    {
+      "id": "hermes-gateway",
+      "name": "Hermes Gateway",
+      "kind": "hermes",
+      "base_url": "http://127.0.0.1:8642",
+      "api_key_env": null,
+      "transport": "gateway",
+      "enabled": true,
+      "metadata": {}
+    },
+    {
+      "id": "codeclue-platform",
+      "name": "CodeClue",
+      "kind": "codeclue",
+      "base_url": "https://api.example.com/codeclue",
+      "api_key_env": "CODECLUE_API_KEY",
+      "transport": "openai_chat",
+      "enabled": false,
+      "metadata": {}
+    }
+  ],
+  "models": [
+    {
+      "id": "mimo-primary",
+      "name": "Mimo V2.5 Pro",
+      "role": "primary",
+      "status": "active",
+      "model_name": "mimo-v2.5-pro",
+      "platform_id": "custom-openai",
+      "priority": 0,
+      "temperature": 0.2,
+      "max_tokens": 2048,
+      "tags": [
+        "cn",
+        "fast",
+        "smart"
+      ],
+      "system_prompt": "你是主模型，负责拆解任务、调度子代理并汇总最终答案。",
+      "last_error": null,
+      "fail_count": 0,
+      "updated_at": "2026-04-29T00:00:00Z"
+    },
+    {
+      "id": "claude-backup",
+      "name": "Claude Backup",
+      "role": "backup",
+      "status": "standby",
+      "model_name": "claude-sonnet-4-20250514",
+      "platform_id": "hermes-gateway",
+      "priority": 1,
+      "temperature": 0.3,
+      "max_tokens": 4096,
+      "tags": [
+        "global",
+        "backup"
+      ],
+      "system_prompt": "你是备用主模型，主模型故障时接管。",
+      "last_error": null,
+      "fail_count": 0,
+      "updated_at": "2026-04-29T00:00:00Z"
+    },
+    {
+      "id": "glm-worker",
+      "name": "GLM Worker",
+      "role": "worker",
+      "status": "standby",
+      "model_name": "glm-5",
+      "platform_id": "hermes-gateway",
+      "priority": 2,
+      "temperature": 0.4,
+      "max_tokens": 2048,
+      "tags": [
+        "cn",
+        "worker"
+      ],
+      "system_prompt": "你是子代理，负责执行分配给你的局部任务。",
+      "last_error": null,
+      "fail_count": 0,
+      "updated_at": "2026-04-29T00:00:00Z"
+    },
+    {
+      "id": "codeclue-worker",
+      "name": "CodeClue Worker",
+      "role": "worker",
+      "status": "standby",
+      "model_name": "codeclue-chat",
+      "platform_id": "codeclue-platform",
+      "priority": 3,
+      "temperature": 0.2,
+      "max_tokens": 2048,
+      "tags": [
+        "code",
+        "worker"
+      ],
+      "system_prompt": "你是代码分析子代理，重点输出结构化建议。",
+      "last_error": null,
+      "fail_count": 0,
+      "updated_at": "2026-04-29T00:00:00Z"
+    }
+  ],
+  "failover_events": [],
+  "recent_runs": [
+    {
+      "request_id": "a0f1eda9-e19a-4345-81e2-cea913942e41",
+      "primary_model_id": "mimo-primary",
+      "primary_model_name": "Mimo V2.5 Pro",
+      "strategy": "delegate_then_summarize",
+      "summary": "Primary model: Mimo V2.5 Pro\nStrategy: delegate_then_summarize\n\nWorker summaries:\n- [OK] GLM Worker: [Hermes Gateway/GLM Worker] analyzed prompt: hello\nResult: Mock execution result (no API key configured for this platform).\n- [FAIL] CodeClue Worker: \n\nFinal summary:\n主模型已读取全部子代理结果，并生成本次汇总结论。这里是 MVP 演示结果，可继续接入真实模型调用。",
+      "worker_results": [
+        {
+          "model_id": "glm-worker",
+          "model_name": "GLM Worker",
+          "success": true,
+          "output": "[Hermes Gateway/GLM Worker] analyzed prompt: hello\nResult: Mock execution result (no API key configured for this platform).",
+          "latency_ms": 0,
+          "error": null
+        },
+        {
+          "model_id": "codeclue-worker",
+          "model_name": "CodeClue Worker",
+          "success": false,
+          "output": "",
+          "latency_ms": 0,
+          "error": "Platform unavailable"
+        }
+      ],
+      "failover_triggered": false,
+      "failover_reason": null,
+      "created_at": "2026-04-29T04:02:08.891940"
+    },
+    {
+      "request_id": "172580d2-cec1-4851-8bb1-a1624c6a1fe0",
+      "primary_model_id": "mimo-primary",
+      "primary_model_name": "Mimo V2.5 Pro",
+      "strategy": "delegate_then_summarize",
+      "summary": "Primary model: Mimo V2.5 Pro\nStrategy: delegate_then_summarize\n\nWorker summaries:\n- [OK] GLM Worker: [Hermes Gateway/GLM Worker] analyzed prompt: 测试主从协作\nResult: Mock execution result (no API key configured for this platform).\n- [FAIL] CodeClue Worker: \n\nFinal summary:\n主模型已读取全部子代理结果，并生成本次汇总结论。这里是 MVP 演示结果，可继续接入真实模型调用。",
+      "worker_results": [
+        {
+          "model_id": "glm-worker",
+          "model_name": "GLM Worker",
+          "success": true,
+          "output": "[Hermes Gateway/GLM Worker] analyzed prompt: 测试主从协作\nResult: Mock execution result (no API key configured for this platform).",
+          "latency_ms": 0,
+          "error": null
+        },
+        {
+          "model_id": "codeclue-worker",
+          "model_name": "CodeClue Worker",
+          "success": false,
+          "output": "",
+          "latency_ms": 0,
+          "error": "Platform unavailable"
+        }
+      ],
+      "failover_triggered": false,
+      "failover_reason": null,
+      "created_at": "2026-04-29T03:39:06.646048"
+    }
+  ]
+}
