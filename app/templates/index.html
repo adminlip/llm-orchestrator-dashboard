@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LLM Orchestrator Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .fade-in { animation: fadeIn .3s ease-in; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    .pulse-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .pulse-dot.green { background: #34d399; box-shadow: 0 0 6px #34d399; }
+    .pulse-dot.amber { background: #fbbf24; box-shadow: 0 0 6px #fbbf24; }
+    .pulse-dot.red   { background: #f87171; box-shadow: 0 0 6px #f87171; }
+    .pulse-dot.gray  { background: #64748b; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+  <div class="max-w-7xl mx-auto px-6 py-8">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight">LLM Orchestrator Dashboard</h1>
+        <p class="text-slate-400 mt-1 text-sm">多模型主从协作平台 &mdash; 支持 Hermes / OpenClue / CodeClue / OpenAI 兼容</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="statusDot" class="pulse-dot green"></span>
+        <span id="statusText" class="text-sm text-emerald-300">运行中</span>
+        <span class="text-xs text-slate-500 ml-2" id="refreshTimer"></span>
+      </div>
+    </div>
+
+    <!-- Row 1: Primary + Controls -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <!-- Primary Card -->
+      <section class="lg:col-span-1 bg-slate-900 border border-slate-800 rounded-2xl p-5 fade-in">
+        <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+          <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          主模型
+        </h2>
+        <div id="primaryInfo">
+          {% if primary %}
+          <div class="space-y-2 text-sm">
+            <div class="text-lg font-bold text-white">{{ primary.name }}</div>
+            <div><span class="text-slate-400">模型：</span><code class="text-emerald-300">{{ primary.model_name }}</code></div>
+            <div><span class="text-slate-400">平台：</span>{{ primary.platform_id }}</div>
+            <div><span class="text-slate-400">状态：</span><span class="text-emerald-300">{{ primary.status }}</span></div>
+            <div><span class="text-slate-400">标签：</span>{{ primary.tags | join(', ') }}</div>
+            {% if primary.fail_count > 0 %}
+            <div><span class="text-slate-400">故障次数：</span><span class="text-amber-300">{{ primary.fail_count }}</span></div>
+            {% endif %}
+          </div>
+          {% else %}
+          <p class="text-slate-400 text-sm">暂无主模型。</p>
+          {% endif %}
+        </div>
+
+        <!-- Switch Primary -->
+        <div class="mt-5 pt-4 border-t border-slate-800">
+          <label class="text-xs text-slate-400 mb-2 block">切换主模型</label>
+          <div class="flex gap-2">
+            <select id="switchSelect" class="flex-1 rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm outline-none focus:border-indigo-500">
+              {% for m in state.models %}
+              <option value="{{ m.id }}" {% if primary and m.id == primary.id %}selected{% endif %}>{{ m.name }} ({{ m.model_name }})</option>
+              {% endfor %}
+            </select>
+            <button id="switchBtn" class="px-3 py-2 rounded-lg bg-indigo-500 hover:bg-indigo-400 text-sm text-white whitespace-nowrap">切换</button>
+          </div>
+        </div>
+
+        <!-- Failover Button -->
+        <div class="mt-3">
+          <button id="failoverBtn" class="w-full px-3 py-2 rounded-lg bg-amber-600/20 hover:bg-amber-600/30 border border-amber-600/30 text-amber-300 text-sm">手动故障切换</button>
+        </div>
+      </section>
+
+      <!-- Workers -->
+      <section class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-5 fade-in">
+        <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+          <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          子代理 &amp; 备用模型
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {% for m in state.models %}
+          {% if m.role != 'primary' or m.status != 'active' %}
+          <div class="rounded-xl border border-slate-800 bg-slate-950 p-4">
+            <div class="flex items-center justify-between">
+              <div class="font-medium text-sm">{{ m.name }}</div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs px-2 py-0.5 rounded-full
+                  {% if m.status == 'active' %}bg-emerald-500/10 text-emerald-300 border border-emerald-500/20
+                  {% elif m.status == 'standby' %}bg-sky-500/10 text-sky-300 border border-sky-500/20
+                  {% elif m.status == 'failed' %}bg-red-500/10 text-red-300 border border-red-500/20
+                  {% else %}bg-slate-800 text-slate-400 border border-slate-700{% endif %}">{{ m.status }}</span>
+                <span class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">{{ m.role }}</span>
+              </div>
+            </div>
+            <div class="mt-2 text-xs text-slate-500 space-y-1">
+              <div>模型：<code>{{ m.model_name }}</code></div>
+              <div>平台：{{ m.platform_id }}</div>
+              {% if m.last_error %}<div class="text-red-400">错误：{{ m.last_error }}</div>{% endif %}
+            </div>
+          </div>
+          {% endif %}
+          {% endfor %}
+        </div>
+      </section>
+    </div>
+
+    <!-- Row 2: Platforms + Failover History -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <section class="bg-slate-900 border border-slate-800 rounded-2xl p-5 fade-in">
+        <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+          <svg class="w-5 h-5 text-violet-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2"/></svg>
+          平台接入
+        </h2>
+        <div class="space-y-3">
+          {% for platform in state.platforms %}
+          <div class="rounded-xl border border-slate-800 bg-slate-950 p-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="font-medium text-sm">{{ platform.name }}</div>
+                <div class="text-xs text-slate-500">{{ platform.kind }}</div>
+              </div>
+              <span class="pulse-dot {% if platform.enabled %}green{% else %}gray{% endif %}"></span>
+            </div>
+            <div class="mt-2 text-xs text-slate-600 break-all font-mono">{{ platform.base_url or 'No base_url' }}</div>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section class="bg-slate-900 border border-slate-800 rounded-2xl p-5 fade-in">
+        <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+          <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          故障切换记录
+        </h2>
+        <div class="space-y-3 max-h-80 overflow-auto" id="failoverList">
+          {% for event in state.failover_events[-10:] | reverse %}
+          <div class="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3">
+            <div class="text-sm font-medium text-amber-200">{{ event.from_model_id }} &rarr; {{ event.to_model_id }}</div>
+            <div class="text-xs text-slate-400 mt-1">{{ event.reason }}</div>
+            <div class="text-xs text-slate-600 mt-1">{{ event.created_at }}</div>
+          </div>
+          {% else %}
+          <p class="text-slate-500 text-sm">暂无故障切换记录。</p>
+          {% endfor %}
+        </div>
+      </section>
+    </div>
+
+    <!-- Row 3: Orchestration -->
+    <section class="bg-slate-900 border border-slate-800 rounded-2xl p-5 mb-6 fade-in">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold flex items-center gap-2">
+          <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          编排演示
+        </h2>
+        <button id="runBtn" class="px-4 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white text-sm font-medium transition-colors">运行</button>
+      </div>
+      <textarea id="prompt" class="w-full h-24 rounded-xl bg-slate-950 border border-slate-800 p-4 text-sm outline-none focus:border-indigo-500 transition-colors resize-none" placeholder="输入任务，例如：比较 Hermes、OpenClue、CodeClue 在代码协作场景的适配方式"></textarea>
+      <pre id="result" class="mt-4 rounded-xl bg-black/40 border border-slate-800 p-4 text-sm text-slate-300 whitespace-pre-wrap min-h-[120px] max-h-96 overflow-auto"></pre>
+    </section>
+
+    <!-- Row 4: Recent Runs -->
+    <section class="bg-slate-900 border border-slate-800 rounded-2xl p-5 fade-in">
+      <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+        <svg class="w-5 h-5 text-teal-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        最近运行
+      </h2>
+      <div class="space-y-3 max-h-80 overflow-auto" id="recentRuns">
+        {% for run in state.recent_runs[:5] %}
+        <div class="rounded-xl border border-slate-800 bg-slate-950 p-3">
+          <div class="flex items-center justify-between text-sm">
+            <span class="font-medium text-teal-300">{{ run.primary_model_name }}</span>
+            <span class="text-xs text-slate-500">{{ run.strategy }}</span>
+          </div>
+          <div class="text-xs text-slate-400 mt-1 line-clamp-2">{{ run.summary[:200] }}</div>
+          <div class="text-xs text-slate-600 mt-1">Workers: {{ run.worker_results | length }} &bull; {{ run.created_at }}</div>
+        </div>
+        {% else %}
+        <p class="text-slate-500 text-sm">暂无运行记录。</p>
+        {% endfor %}
+      </div>
+    </section>
+
+    <footer class="mt-8 text-center text-xs text-slate-600">
+      LLM Orchestrator Dashboard &bull; <a href="https://github.com" class="underline hover:text-slate-400">GitHub</a>
+    </footer>
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+
+    async function api(method, path, body) {
+      const opts = { method, headers: { 'Content-Type': 'application/json' } };
+      if (body) opts.body = JSON.stringify(body);
+      const res = await fetch(path, opts);
+      return res.json();
+    }
+
+    $('switchBtn').addEventListener('click', async () => {
+      const id = $('switchSelect').value;
+      $('switchBtn').textContent = '...';
+      await api('POST', '/api/primary/switch', { model_id: id, reason: 'dashboard switch' });
+      location.reload();
+    });
+
+    $('failoverBtn').addEventListener('click', async () => {
+      if (!confirm('确认手动故障切换？')) return;
+      $('failoverBtn').textContent = '...';
+      await api('POST', '/api/failover?reason=dashboard_manual');
+      location.reload();
+    });
+
+    $('runBtn').addEventListener('click', async () => {
+      const prompt = $('prompt').value.trim();
+      if (!prompt) { $('result').textContent = '请先输入任务。'; return; }
+      $('result').textContent = '正在编排主模型与子代理...';
+      $('runBtn').disabled = true;
+      $('runBtn').textContent = '运行中...';
+      try {
+        const data = await api('POST', '/api/orchestrate', { prompt });
+        $('result').textContent = data.summary || JSON.stringify(data, null, 2);
+      } catch (e) {
+        $('result').textContent = 'Error: ' + e.message;
+      }
+      $('runBtn').disabled = false;
+      $('runBtn').textContent = '运行';
+    });
+
+    let countdown = 30;
+    setInterval(() => {
+      countdown--;
+      $('refreshTimer').textContent = countdown + 's';
+      if (countdown <= 0) { countdown = 30; location.reload(); }
+    }, 1000);
+  </script>
+</body>
+</html>
